@@ -6,8 +6,8 @@
   <title>Simulasi Pinjaman Credit Union Remaung Kecubung</title>
   <style>
     :root {
-      --primary: #1e40af;
-      --secondary: #3b82f6;
+      --primary: #1e3a8a;
+      --secondary: #2563eb;
       --accent: #ef4444;
       --bg: #f3f6fc;
       --card: #ffffff;
@@ -27,24 +27,13 @@
       padding: 24px;
     }
     header {
-      margin-bottom: 20px;
       text-align: center;
+      margin-bottom: 20px;
     }
-    header h1 {
-      font-style: italic;
-      color: var(--accent);
-      font-weight: normal;
-      display: inline;
-    }
-    header h1 strong {
-      color: var(--primary);
-      font-style: normal;
+    .title-group {
+      font-size: 22px;
       font-weight: bold;
-    }
-    header h2 {
-      margin-top: 4px;
-      font-size: 18px;
-      color: #1e293b;
+      color: var(--primary);
     }
     label {
       font-size: 14px;
@@ -60,7 +49,7 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 14px;
     }
     .btn {
@@ -71,20 +60,10 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 15px;
     }
-    .btn.secondary {
-      background: var(--accent);
-    }
-    .btn.export {
-      background: #2563eb;
-    }
-    .flex {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
+    .btn.secondary { background: var(--accent); }
+    .btn.export { background: #1e40af; }
+    .flex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -103,32 +82,20 @@
       padding: 6px 8px;
     }
     td:first-child, th:first-child { text-align: left; }
-    .table-wrapper {
-      overflow-x: auto;
-    }
-    @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-      .flex {
-        flex-wrap: nowrap;
-      }
-      body { font-size: 16px; }
-      .btn { font-size: 16px; padding: 12px 20px; }
-    }
-    @media (max-width: 767px) {
+    @media (max-width: 600px) {
       .wrap { margin: 10px; padding: 16px; }
-      header h1 { font-size: 20px; }
-      header h2 { font-size: 16px; }
-      .btn { width: 100%; }
+      table { font-size: 12px; }
+      .btn { flex: 1 1 100%; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Credit Union <strong>Remaung Kecubung</strong></h1>
-      <h2>Simulasi Pinjaman</h2>
+      <div class="title-group">
+        <span style="color:#ef4444;font-style:italic;">Credit Union</span> <span style="color:#1e40af;font-weight:bold;">Remaung Kecubung</span><br>
+        <span style="font-size:18px;color:#1e3a8a;">Simulasi Pinjaman</span>
+      </div>
     </header>
 
     <div class="grid">
@@ -153,21 +120,19 @@
       <button id="pdf" class="btn export">Download PDF</button>
     </div>
 
-    <div class="table-wrapper">
-      <table id="table">
-        <thead>
-          <tr>
-            <th>Bulan</th>
-            <th>Tanggal</th>
-            <th>Angsuran</th>
-            <th>Bunga</th>
-            <th>Pokok</th>
-            <th>Sisa Saldo</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Bulan</th>
+          <th>Tanggal</th>
+          <th>Angsuran</th>
+          <th>Bunga</th>
+          <th>Pokok</th>
+          <th>Sisa Saldo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -200,7 +165,7 @@
         if (m === nMonths) saldo = 0;
 
         const d = new Date(startDate);
-        d.setMonth(startDate.getMonth() + m - 1);
+        d.setMonth(startDate.getMonth() + m); // mulai bulan depan dari tanggal hari ini
         const tgl = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         const row = { bulan: m, tanggal: tgl, angsuran, bunga, pokok, saldo: Math.max(0, Math.round(saldo)) };
@@ -243,31 +208,25 @@
       URL.revokeObjectURL(url);
     });
 
-    document.getElementById('pdf').addEventListener('click', () => {
+    document.getElementById('pdf').addEventListener('click', async () => {
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-
-      // Judul PDF dua baris dengan gaya berbeda
       doc.setFontSize(18);
       doc.setTextColor(30, 64, 175);
       doc.text('Simulasi Pinjaman', 40, 50);
-
       doc.setFontSize(14);
-      doc.setTextColor(239, 68, 68);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Credit Union', 40, 70);
-
-      doc.setFontSize(14);
+      doc.setTextColor(200, 0, 0);
+      doc.text('Credit Union', 40, 70, { italic: true });
       doc.setTextColor(30, 64, 175);
       doc.setFont('helvetica', 'bold');
-      doc.text('Remaung Kecubung', 140, 70);
+      doc.text('Remaung Kecubung', 130, 70);
 
       const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
       doc.autoTable({
         head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
         body: body,
-        startY: 90,
+        startY: 100,
         theme: 'grid',
         styles: { halign: 'right', fontSize: 9 },
         headStyles: { fillColor: [30, 64, 175], textColor: 255, halign: 'center' },
@@ -277,5 +236,3 @@
     });
   </script>
 </body>
-</html>
-
