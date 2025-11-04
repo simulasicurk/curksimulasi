@@ -26,11 +26,10 @@
       padding: 24px;
     }
 
-    /* HEADER (Default: putih elegan) */
     header {
-      background: var(--card);
       text-align: center;
       padding: 20px;
+      background: var(--card);
       border-radius: 12px 12px 0 0;
     }
     header h1 {
@@ -101,7 +100,6 @@
     }
     td:first-child, th:first-child { text-align: left; }
 
-    /* Kotak hasil angsuran */
     .result-box {
       display: none;
       margin-top: 16px;
@@ -192,6 +190,10 @@
     </table>
   </div>
 
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
   <script>
     const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
     const round50 = n => Math.ceil(n / 50) * 50;
@@ -257,6 +259,47 @@
       document.getElementById('tenor').value = '';
       document.querySelector('#table tbody').innerHTML = '';
       document.getElementById('resultBox').style.display = 'none';
+    });
+
+    // ✅ Download CSV
+    document.getElementById('export').addEventListener('click', () => {
+      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
+      const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
+      window._data.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'simulasi_angsuran.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ✅ Download PDF
+    document.getElementById('pdf').addEventListener('click', async () => {
+      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+      // Judul 2 baris
+      doc.setFontSize(16);
+      doc.setTextColor(15, 2, 250); // biru
+      doc.text('Simulasi Angsuran', 40, 50);
+      doc.setTextColor(250, 2, 2); // merah
+      doc.text('Credit Union ', 40, 70);
+      doc.setTextColor(15, 2, 250); // biru lagi
+      doc.text('Remaung Kecubung', 150, 70);
+
+      const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
+      doc.autoTable({
+        head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
+        body: body,
+        startY: 100,
+        theme: 'grid',
+        styles: { halign: 'right', fontSize: 9 },
+        headStyles: { fillColor: [15, 2, 250], textColor: 255, halign: 'center' },
+        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
+      });
+      doc.save('simulasi_angsuran.pdf');
     });
   </script>
 </body>
