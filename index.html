@@ -1,1 +1,281 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulasi Pinjaman Credit Union Remaung Kecubung</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --secondary: #3b82f6;
+      --accent: #ef4444;
+      --bg: #f3f6fc;
+      --card: #ffffff;
+    }
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: #0f172a;
+      margin: 0;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      padding: 24px;
+    }
+    header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    header h1 {
+      font-style: italic;
+      color: var(--accent);
+      font-weight: normal;
+      display: inline;
+    }
+    header h1 strong {
+      color: var(--primary);
+      font-style: normal;
+      font-weight: bold;
+    }
+    header h2 {
+      margin-top: 4px;
+      font-size: 18px;
+      color: #1e293b;
+    }
+    label {
+      font-size: 14px;
+      color: #334155;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: 1px solid #dbeafe;
+      font-size: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .btn {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .btn.secondary {
+      background: var(--accent);
+    }
+    .btn.export {
+      background: #2563eb;
+    }
+    .flex {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    th {
+      background: var(--secondary);
+      color: white;
+      padding: 8px;
+      text-align: center;
+    }
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      text-align: right;
+      padding: 6px 8px;
+    }
+    td:first-child, th:first-child { text-align: left; }
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .flex {
+        flex-wrap: nowrap;
+      }
+      body { font-size: 16px; }
+      .btn { font-size: 16px; padding: 12px 20px; }
+    }
+    @media (max-width: 767px) {
+      .wrap { margin: 10px; padding: 16px; }
+      header h1 { font-size: 20px; }
+      header h2 { font-size: 16px; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Credit Union <strong>Remaung Kecubung</strong></h1>
+      <h2>Simulasi Pinjaman</h2>
+    </header>
+
+    <div class="grid">
+      <div>
+        <label>Jumlah Pinjaman (Rp)</label>
+        <input id="amount" type="text" placeholder="Contoh: 100.000.000" />
+      </div>
+      <div>
+        <label>Suku Bunga per Bulan (%)</label>
+        <input id="rate" type="number" step="0.01" placeholder="Contoh: 1" />
+      </div>
+      <div>
+        <label>Tenor (Bulan)</label>
+        <input id="tenor" type="number" placeholder="Contoh: 60" />
+      </div>
+    </div>
+
+    <div class="flex">
+      <button id="calc" class="btn">Hitung</button>
+      <button id="reset" class="btn secondary">Reset</button>
+      <button id="export" class="btn export">Download CSV</button>
+      <button id="pdf" class="btn export">Download PDF</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Bulan</th>
+            <th>Tanggal</th>
+            <th>Angsuran</th>
+            <th>Bunga</th>
+            <th>Pokok</th>
+            <th>Sisa Saldo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script>
+    const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+    const round50 = n => Math.ceil(n / 50) * 50;
+
+    const amountInput = document.getElementById('amount');
+    amountInput.addEventListener('input', e => {
+      let v = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    });
+
+    function buildTable(P, rate, nMonths) {
+      const tbody = document.querySelector('#table tbody');
+      tbody.innerHTML = '';
+      const data = [];
+      const startDate = new Date();
+
+      const r = rate / 100;
+      const angsuran = round50(P * r / (1 - Math.pow(1 + r, -nMonths)));
+
+      let saldo = P;
+
+      for (let m = 1; m <= nMonths; m++) {
+        const bunga = round50(saldo * r);
+        const pokok = round50(angsuran - bunga);
+        saldo = saldo - pokok;
+        if (m === nMonths) saldo = 0;
+
+        const d = new Date(startDate);
+        d.setMonth(startDate.getMonth() + m - 1);
+        const tgl = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        const row = { bulan: m, tanggal: tgl, angsuran, bunga, pokok, saldo: Math.max(0, Math.round(saldo)) };
+        data.push(row);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m}</td><td>${tgl}</td><td>${fmt(angsuran)}</td><td>${fmt(bunga)}</td><td>${fmt(pokok)}</td><td>${fmt(row.saldo)}</td>`;
+        tbody.appendChild(tr);
+      }
+      return data;
+    }
+
+    document.getElementById('calc').addEventListener('click', () => {
+      const P = Number(amountInput.value.replace(/\./g, ''));
+      const rate = Number(document.getElementById('rate').value);
+      const n = Number(document.getElementById('tenor').value);
+      if (!P || !rate || !n) {
+        alert('Mohon lengkapi semua kolom input!');
+        return;
+      }
+      window._data = buildTable(P, rate, n);
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      amountInput.value = '';
+      document.getElementById('rate').value = '';
+      document.getElementById('tenor').value = '';
+      document.querySelector('#table tbody').innerHTML = '';
+    });
+
+    document.getElementById('export').addEventListener('click', () => {
+      if (!window._data) return;
+      const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
+      window._data.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'simulasi_angsuran.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('pdf').addEventListener('click', () => {
+      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+      // Judul PDF dua baris dengan gaya berbeda
+      doc.setFontSize(18);
+      doc.setTextColor(30, 64, 175);
+      doc.text('Simulasi Pinjaman', 40, 50);
+
+      doc.setFontSize(14);
+      doc.setTextColor(239, 68, 68);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Credit Union', 40, 70);
+
+      doc.setFontSize(14);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Remaung Kecubung', 140, 70);
+
+      const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
+      doc.autoTable({
+        head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
+        body: body,
+        startY: 90,
+        theme: 'grid',
+        styles: { halign: 'right', fontSize: 9 },
+        headStyles: { fillColor: [30, 64, 175], textColor: 255, halign: 'center' },
+        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
+      });
+      doc.save('simulasi_angsuran.pdf');
+    });
+  </script>
+</body>
+</html>
 
