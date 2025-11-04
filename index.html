@@ -32,23 +32,10 @@
       background: var(--card);
       border-radius: 12px 12px 0 0;
     }
-    header h1 {
-      margin: 0;
-      font-size: 22px;
-    }
-    .credit {
-      color: var(--accent);
-      font-style: italic;
-    }
-    .remaung {
-      color: var(--primary);
-      font-weight: bold;
-    }
-    .subtitle {
-      color: #0f172a;
-      margin-top: 4px;
-      font-size: 18px;
-    }
+    header h1 { margin: 0; font-size: 22px; }
+    .credit { color: var(--accent); font-style: italic; }
+    .remaung { color: var(--primary); font-weight: bold; }
+    .subtitle { color: #0f172a; margin-top: 4px; font-size: 18px; }
 
     .grid {
       display: grid;
@@ -56,10 +43,7 @@
       gap: 14px;
       margin-top: 16px;
     }
-    label {
-      font-size: 14px;
-      color: #334155;
-    }
+    label { font-size: 14px; color: #334155; }
     input {
       width: 100%;
       padding: 10px;
@@ -124,12 +108,22 @@
       top: 12px;
     }
 
+    .totals {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      background: #f9fafb;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    .totals div { margin: 4px 0; }
+
     @media (max-width: 768px) {
       .wrap { margin: 10px; padding: 16px; }
-      header {
-        background: #0f172a;
-        color: white;
-      }
+      header { background: #0f172a; color: white; }
       header h1 .credit { color: var(--accent); }
       header h1 .remaung { color: var(--primary); }
       .subtitle { color: white; }
@@ -187,6 +181,12 @@
       </thead>
       <tbody></tbody>
     </table>
+
+    <div id="totals" class="totals" style="display:none;">
+      <div>Total Angsuran: <span id="tAngsuran"></span></div>
+      <div>Total Pokok: <span id="tPokok"></span></div>
+      <div>Total Bunga: <span id="tBunga"></span></div>
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -210,11 +210,11 @@
       const r = rate / 100;
       const angsuran = round50(P * r / (1 - Math.pow(1 + r, -nMonths)));
       let saldo = P;
+      let totalPokok = 0, totalBunga = 0;
 
       for (let m = 1; m <= nMonths; m++) {
         let bunga, pokok;
         if (m === nMonths) {
-          // 🔹 RUMUS KHUSUS BULAN TERAKHIR
           pokok = round50(saldo);
           bunga = round50(angsuran - pokok);
           saldo = 0;
@@ -223,6 +223,9 @@
           pokok = round50(angsuran - bunga);
           saldo -= pokok;
         }
+
+        totalPokok += pokok;
+        totalBunga += bunga;
 
         const d = new Date(startDate);
         d.setMonth(startDate.getMonth() + m);
@@ -234,7 +237,14 @@
         tr.innerHTML = `<td>${m}</td><td>${tgl}</td><td>${fmt(angsuran)}</td><td>${fmt(bunga)}</td><td>${fmt(pokok)}</td><td>${fmt(row.saldo)}</td>`;
         tbody.appendChild(tr);
       }
-      return { data, angsuran };
+
+      const totalAngsuran = totalPokok + totalBunga;
+      document.getElementById('totals').style.display = 'flex';
+      document.getElementById('tPokok').innerText = fmt(totalPokok);
+      document.getElementById('tBunga').innerText = fmt(totalBunga);
+      document.getElementById('tAngsuran').innerText = fmt(totalAngsuran);
+
+      return { data, angsuran, totalPokok, totalBunga, totalAngsuran };
     }
 
     document.getElementById('calc').addEventListener('click', () => {
@@ -245,8 +255,8 @@
         alert('Mohon lengkapi semua kolom input!');
         return;
       }
-      const { data, angsuran } = buildTable(P, rate, n);
-      window._data = data;
+      const { data, angsuran, totalPokok, totalBunga, totalAngsuran } = buildTable(P, rate, n);
+      window._data = { rows: data, totalPokok, totalBunga, totalAngsuran };
       const box = document.getElementById('resultBox');
       document.getElementById('resultText').innerText = `Angsuran per bulan: ${fmt(angsuran)}`;
       box.style.display = 'block';
@@ -264,12 +274,16 @@
       document.getElementById('tenor').value = '';
       document.querySelector('#table tbody').innerHTML = '';
       document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('totals').style.display = 'none';
     });
 
+    // ✅ CSV
     document.getElementById('export').addEventListener('click', () => {
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
-      window._data.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
+      window._data.rows.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
+      rows.push([]);
+      rows.push(['Total','','',window._data.totalBunga,window._data.totalPokok,window._data.totalAngsuran]);
       const csv = rows.map(r => r.join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -278,6 +292,7 @@
       URL.revokeObjectURL(url);
     });
 
+    // ✅ PDF
     document.getElementById('pdf').addEventListener('click', async () => {
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const { jsPDF } = window.jspdf;
@@ -291,7 +306,7 @@
       doc.setTextColor(15, 2, 250);
       doc.text('Remaung Kecubung', 150, 70);
 
-      const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
+      const body = window._data.rows.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
       doc.autoTable({
         head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
         body: body,
@@ -301,6 +316,13 @@
         headStyles: { fillColor: [15, 2, 250], textColor: 255, halign: 'center' },
         columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
       });
+
+      const finalY = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(11);
+      doc.text(`Total Pokok : ${fmt(window._data.totalPokok)}`, 40, finalY);
+      doc.text(`Total Bunga : ${fmt(window._data.totalBunga)}`, 40, finalY + 15);
+      doc.text(`Total Angsuran : ${fmt(window._data.totalAngsuran)}`, 40, finalY + 30);
+
       doc.save('simulasi_angsuran.pdf');
     });
   </script>
