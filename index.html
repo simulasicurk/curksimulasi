@@ -6,21 +6,18 @@
   <title>Simulasi Pinjaman Credit Union Remaung Kecubung</title>
   <style>
     :root {
-      --primary: #1e40af;
-      --secondary: #3b82f6;
+      --primary: #1e3a8a;
+      --secondary: #2563eb;
       --accent: #ef4444;
       --bg: #f3f6fc;
       --card: #ffffff;
     }
-
     body {
       font-family: 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: #0f172a;
       margin: 0;
-      padding: 0;
     }
-
     .wrap {
       max-width: 1100px;
       margin: 30px auto;
@@ -29,45 +26,19 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
       padding: 24px;
     }
-
-    /* HEADER BARU */
     header {
       text-align: center;
-      padding: 16px;
-      background: #dbeafe; /* biru lembut */
-      border-radius: 12px;
       margin-bottom: 20px;
     }
-
-    .cu-red {
-      color: #ff3333;          /* merah cerah */
-      font-style: italic;
+    .title-group {
       font-size: 22px;
-    }
-
-    .cu-blue {
-      color: #0033cc;          /* biru tua elegan */
       font-weight: bold;
-      font-size: 22px;
-      margin-left: 6px;
+      color: var(--primary);
     }
-
-    .simulasi {
-      color: white;
-      background: #1e3a8a;     /* biru tua kontras */
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-weight: 600;
-    }
-
-    /* Input dan tabel */
     label {
       font-size: 14px;
       color: #334155;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -76,13 +47,11 @@
       border: 1px solid #dbeafe;
       font-size: 15px;
     }
-
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 14px;
     }
-
     .btn {
       background: var(--secondary);
       color: white;
@@ -92,80 +61,70 @@
       cursor: pointer;
       font-weight: 600;
     }
-
-    .btn.secondary {
-      background: var(--accent);
-    }
-
-    .btn.export {
-      background: #2563eb;
-    }
-
-    .flex { 
-      display: flex; 
-      flex-wrap: wrap;
-      gap: 10px; 
-      margin-top: 12px; 
-    }
-
+    .btn.secondary { background: var(--accent); }
+    .btn.export { background: #1e40af; }
+    .flex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 16px;
       font-size: 14px;
-      overflow-x: auto;
-      display: block;
     }
-
     th {
       background: var(--secondary);
       color: white;
       padding: 8px;
       text-align: center;
     }
-
     td {
       border-bottom: 1px solid #e2e8f0;
       text-align: right;
       padding: 6px 8px;
     }
-
     td:first-child, th:first-child { text-align: left; }
 
-    /* RESPONSIVE */
+    /* Responsif untuk HP */
     @media (max-width: 600px) {
-      .wrap {
-        margin: 10px;
-        padding: 16px;
-      }
-
+      body { background: #ffffff; }
+      .wrap { margin: 0; padding: 16px; border-radius: 0; }
       header {
-        background: #dbeafe;
+        background: #1e3a8a;
         padding: 20px 10px;
+        border-radius: 8px;
+        margin: -16px -16px 20px -16px;
       }
-
-      .cu-red, .cu-blue {
-        display: block;
+      .title-group {
+        color: white;
         font-size: 20px;
+        text-align: center;
       }
-
-      .simulasi {
+      .title-group span:first-child {
+        color: #ef4444;
+        font-style: italic;
+      }
+      .title-group span:nth-child(2) {
+        color: #1e40af;
+        font-weight: bold;
+      }
+      .title-group .subtitle {
+        display: block;
+        color: #ffffff;
         font-size: 16px;
-        margin-top: 10px;
+        margin-top: 4px;
       }
-
-      table {
-        font-size: 13px;
-      }
+      table { font-size: 12px; overflow-x: auto; display: block; }
+      .btn { flex: 1 1 100%; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <span class="cu-red">Credit Union</span>
-      <span class="cu-blue">Remaung Kecubung</span>
-      <div class="simulasi">Simulasi Angsuran</div>
+      <div class="title-group">
+        <span style="color:#ef4444;font-style:italic;">Credit Union</span>
+        <span style="color:#1e40af;font-weight:bold;"> Remaung Kecubung</span><br>
+        <span class="subtitle">Simulasi Angsuran</span>
+      </div>
     </header>
 
     <div class="grid">
@@ -205,7 +164,6 @@
     </table>
   </div>
 
-  <!-- SCRIPT JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script>
@@ -236,7 +194,7 @@
         if (m === nMonths) saldo = 0;
 
         const d = new Date(startDate);
-        d.setMonth(startDate.getMonth() + m); // mulai bulan depan
+        d.setMonth(startDate.getMonth() + m); // mulai bulan depan dari tanggal hari ini
         const tgl = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         const row = { bulan: m, tanggal: tgl, angsuran, bunga, pokok, saldo: Math.max(0, Math.round(saldo)) };
@@ -283,16 +241,15 @@
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-
       doc.setFontSize(18);
       doc.setTextColor(30, 64, 175);
       doc.text('Simulasi Pinjaman', 40, 50);
-      doc.setTextColor(239, 68, 68);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Credit Union', 40, 70);
-      doc.setTextColor(0, 51, 204);
+      doc.setFontSize(14);
+      doc.setTextColor(200, 0, 0);
+      doc.text('Credit Union', 40, 70, { italic: true });
+      doc.setTextColor(30, 64, 175);
       doc.setFont('helvetica', 'bold');
-      doc.text('Remaung Kecubung', 150, 70);
+      doc.text('Remaung Kecubung', 130, 70);
 
       const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
       doc.autoTable({
