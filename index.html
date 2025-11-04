@@ -82,9 +82,37 @@
       padding: 6px 8px;
     }
     td:first-child, th:first-child { text-align: left; }
+
+    /* Responsif untuk HP */
     @media (max-width: 600px) {
-      .wrap { margin: 10px; padding: 16px; }
-      table { font-size: 12px; }
+      body { background: #ffffff; }
+      .wrap { margin: 0; padding: 16px; border-radius: 0; }
+      header {
+        background: #1e3a8a;
+        padding: 20px 10px;
+        border-radius: 8px;
+        margin: -16px -16px 20px -16px;
+      }
+      .title-group {
+        color: white;
+        font-size: 20px;
+        text-align: center;
+      }
+      .title-group span:first-child {
+        color: #ef4444;
+        font-style: italic;
+      }
+      .title-group span:nth-child(2) {
+        color: #1e40af;
+        font-weight: bold;
+      }
+      .title-group .subtitle {
+        display: block;
+        color: #ffffff;
+        font-size: 16px;
+        margin-top: 4px;
+      }
+      table { font-size: 12px; overflow-x: auto; display: block; }
       .btn { flex: 1 1 100%; }
     }
   </style>
@@ -93,8 +121,9 @@
   <div class="wrap">
     <header>
       <div class="title-group">
-        <span style="color:#ef4444;font-style:italic;">Credit Union</span> <span style="color:#1e40af;font-weight:bold;">Remaung Kecubung</span><br>
-        <span style="font-size:18px;color:#1e3a8a;">Simulasi Pinjaman</span>
+        <span style="color:#ef4444;font-style:italic;">Credit Union</span>
+        <span style="color:#1e40af;font-weight:bold;"> Remaung Kecubung</span><br>
+        <span class="subtitle">Simulasi Angsuran</span>
       </div>
     </header>
 
