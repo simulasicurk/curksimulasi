@@ -1,284 +1,322 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulasi Pinjaman Credit Union Remaung Kecubung</title>
-<style>
-  body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f0f8ff;
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
-  header {
-    background-color: #001f3f;
-    color: white;
-    text-align: center;
-    padding: 15px;
-  }
-  header h1 { margin: 0; }
-  .credit { color: #fa0202; font-style: italic; }
-  .remaung { color: #0f02fa; font-weight: bold; }
-  .container {
-    max-width: 800px;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-  input {
-    width: 100%;
-    padding: 10px;
-    margin: 6px 0;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-  }
-  button {
-    background-color: #0f02fa;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-  }
-  button:hover { opacity: 0.9; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: right;
-  }
-  th {
-    background-color: #0f02fa;
-    color: white;
-  }
-  .export-buttons {
-    margin-top: 20px;
-    text-align: right;
-  }
-  .export-buttons button {
-    background-color: #fa0202;
-    margin-left: 10px;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulasi Angsuran Credit Union Remaung Kecubung</title>
+  <style>
+    :root {
+      --primary: #0f02fa;
+      --accent: #fa0202;
+      --bg: #f3f6fc;
+      --card: #ffffff;
+    }
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: #0f172a;
+      margin: 0;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 20px auto;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      padding: 24px;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+    header h1 { margin: 0; font-size: 22px; }
+    .credit { color: var(--accent); font-style: italic; }
+    .remaung { color: var(--primary); font-weight: bold; }
+    .subtitle { color: #0f172a; margin-top: 4px; font-size: 18px; }
 
-  /* Total section */
-  .totals {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-    border-top: 2px solid #ccc;
-    padding-top: 10px;
-    text-align: center;
-    font-weight: bold;
-    color: #0f02fa;
-    flex-wrap: wrap;
-  }
-  .total-box {
-    flex: 1 1 30%;
-    margin: 5px;
-    background: #f8faff;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  }
-  .total-box span {
-    display: block;
-  }
-  @media (max-width: 600px) {
-    .totals { flex-direction: column; align-items: center; }
-    .total-box { width: 90%; }
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <h1><span class="credit">Credit Union</span> <span class="remaung">Remaung Kecubung</span></h1>
-  <h3>Simulasi Pinjaman</h3>
-</header>
-
-<div class="container">
-  <label>Pokok Pinjaman (Rp):</label>
-  <input type="number" id="amount" placeholder="Masukkan jumlah pinjaman">
-  <label>Suku Bunga per Bulan (%):</label>
-  <input type="number" id="rate" placeholder="Masukkan bunga per bulan">
-  <label>Tenor (bulan):</label>
-  <input type="number" id="tenor" placeholder="Masukkan tenor dalam bulan">
-  
-  <button onclick="calculateInstallment()">Hitung</button>
-  <button onclick="resetForm()" style="background-color:#fa0202;">Reset</button>
-
-  <div id="result"></div>
-  <div class="export-buttons">
-    <button onclick="exportCSV()">Download CSV</button>
-    <button onclick="exportPDF()">Download PDF</button>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-
-<script>
-function round50(x) {
-  return Math.ceil(x / 50) * 50;
-}
-
-function calculateInstallment() {
-  const amount = parseFloat(document.getElementById("amount").value);
-  const rate = parseFloat(document.getElementById("rate").value) / 100;
-  const tenor = parseInt(document.getElementById("tenor").value);
-  if (!amount || !rate || !tenor) {
-    alert("Mohon isi semua kolom input.");
-    return;
-  }
-
-  const monthlyPayment = round50(amount * (rate * Math.pow(1 + rate, tenor)) / (Math.pow(1 + rate, tenor) - 1));
-  let balance = amount;
-  const today = new Date();
-
-  let totalPokok = 0;
-  let totalBunga = 0;
-  let totalAngsuran = 0;
-
-  let table = `
-  <table id="tabelAngsuran">
-    <thead>
-      <tr>
-        <th>Bulan</th>
-        <th>Tanggal</th>
-        <th>Angsuran</th>
-        <th>Bunga</th>
-        <th>Pokok</th>
-        <th>Sisa Saldo</th>
-      </tr>
-    </thead>
-    <tbody>`;
-
-  for (let i = 1; i <= tenor; i++) {
-    let bunga, pokok, tanggal;
-    tanggal = new Date(today.getFullYear(), today.getMonth() + i, today.getDate()).toLocaleDateString('id-ID');
-
-    if (i < tenor) {
-      bunga = round50(balance * rate);
-      pokok = round50(monthlyPayment - bunga);
-      balance -= pokok;
-    } else {
-      pokok = round50(balance);
-      bunga = round50(monthlyPayment - pokok);
-      balance = 0;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    label { font-size: 14px; color: #334155; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: 1px solid #dbeafe;
+      font-size: 15px;
     }
 
-    totalPokok += pokok;
-    totalBunga += bunga;
-    totalAngsuran += monthlyPayment;
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn.secondary { background: var(--accent); }
+    .btn.export { background: #2563eb; }
+    .flex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 
-    table += `
-      <tr>
-        <td>${i}</td>
-        <td style="text-align:center">${tanggal}</td>
-        <td>${monthlyPayment.toLocaleString('id-ID')}</td>
-        <td>${bunga.toLocaleString('id-ID')}</td>
-        <td>${pokok.toLocaleString('id-ID')}</td>
-        <td>${balance.toLocaleString('id-ID')}</td>
-      </tr>`;
-  }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 8px;
+      text-align: center;
+    }
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      text-align: right;
+      padding: 6px 8px;
+    }
+    td:first-child, th:first-child { text-align: left; }
 
-  table += `</tbody></table>`;
+    .result-box {
+      display: none;
+      margin-top: 16px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 16px;
+      position: relative;
+    }
+    .copy-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      position: absolute;
+      right: 12px;
+      top: 12px;
+    }
 
-  const totalHTML = `
-    <div class="totals">
-      <div class="total-box"><span>Total Angsuran</span><span>Rp ${totalAngsuran.toLocaleString('id-ID')}</span></div>
-      <div class="total-box"><span>Total Pokok</span><span>Rp ${totalPokok.toLocaleString('id-ID')}</span></div>
-      <div class="total-box"><span>Total Bunga</span><span>Rp ${totalBunga.toLocaleString('id-ID')}</span></div>
+    /* --- TOTAL BOXES --- */
+    .totals {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      border-top: 2px solid #e2e8f0;
+      padding-top: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .total-box {
+      flex: 1 1 30%;
+      background: #f8faff;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 768px) {
+      .wrap { margin: 10px; padding: 16px; }
+      header { background: #0f172a; color: white; border-radius: 12px 12px 0 0; }
+      header h1 .credit { color: var(--accent); }
+      header h1 .remaung { color: var(--primary); }
+      .subtitle { color: white; }
+      .result-box { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1><span class="credit">Credit Union</span> <span class="remaung">Remaung Kecubung</span></h1>
+      <div class="subtitle">Simulasi Angsuran</div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <label>Jumlah Pinjaman (Rp)</label>
+        <input id="amount" type="text" placeholder="Contoh: 100.000.000" />
+      </div>
+      <div>
+        <label>Suku Bunga per Bulan (%)</label>
+        <input id="rate" type="number" step="0.01" placeholder="Contoh: 1" />
+      </div>
+      <div>
+        <label>Tenor (Bulan)</label>
+        <input id="tenor" type="number" placeholder="Contoh: 60" />
+      </div>
     </div>
-  `;
 
-  document.getElementById("result").innerHTML = table + totalHTML;
-}
+    <div class="flex">
+      <button id="calc" class="btn">Hitung</button>
+      <button id="reset" class="btn secondary">Reset</button>
+      <button id="export" class="btn export">Download CSV</button>
+      <button id="pdf" class="btn export">Download PDF</button>
+    </div>
 
-function resetForm() {
-  document.getElementById("amount").value = '';
-  document.getElementById("rate").value = '';
-  document.getElementById("tenor").value = '';
-  document.getElementById("result").innerHTML = '';
-}
+    <div id="resultBox" class="result-box">
+      <span id="resultText">Angsuran per bulan: Rp 0</span>
+      <button id="copyBtn" class="copy-btn">Salin</button>
+    </div>
 
-function exportCSV() {
-  const rows = document.querySelectorAll("#tabelAngsuran tr");
-  if (!rows.length) {
-    alert("Tidak ada data untuk diunduh.");
-    return;
-  }
-  let csv = [];
-  for (let row of rows) {
-    const cols = row.querySelectorAll("td, th");
-    let data = Array.from(cols).map(c => c.innerText);
-    csv.push(data.join(","));
-  }
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Bulan</th>
+          <th>Tanggal</th>
+          <th>Angsuran</th>
+          <th>Bunga</th>
+          <th>Pokok</th>
+          <th>Sisa Saldo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-  const totalRow = ["", "", "TOTAL", 
-    document.querySelector('.total-box:nth-child(3) span:last-child').innerText, 
-    document.querySelector('.total-box:nth-child(2) span:last-child').innerText,
-    document.querySelector('.total-box:nth-child(1) span:last-child').innerText
-  ];
-  csv.push(totalRow.join(","));
+    <div class="totals" id="totals" style="display:none;">
+      <div class="total-box" id="totalAngsuran">Total Angsuran: Rp 0</div>
+      <div class="total-box" id="totalPokok">Total Pokok: Rp 0</div>
+      <div class="total-box" id="totalBunga">Total Bunga: Rp 0</div>
+    </div>
+  </div>
 
-  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "simulasi_angsuran.csv";
-  link.click();
-}
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-function exportPDF() {
-  const rows = document.querySelectorAll("#tabelAngsuran tr");
-  if (!rows.length) {
-    alert("Tidak ada data untuk diunduh.");
-    return;
-  }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape' });
-  doc.setFontSize(14);
-  doc.text("Simulasi Pinjaman", 14, 15);
-  doc.setFont("italic");
-  doc.setTextColor(250, 2, 2);
-  doc.text("Credit Union", 14, 22);
-  doc.setFont("bold");
-  doc.setTextColor(15, 2, 250);
-  doc.text("Remaung Kecubung", 45, 22);
+  <script>
+    const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+    const round50 = n => Math.ceil(n / 50) * 50;
 
-  doc.autoTable({
-    html: "#tabelAngsuran",
-    startY: 28,
-    styles: { halign: 'right' },
-    headStyles: { fillColor: [15, 2, 250], textColor: 255 }
-  });
+    const amountInput = document.getElementById('amount');
+    amountInput.addEventListener('input', e => {
+      let v = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    });
 
-  const totalAng = document.querySelector('.total-box:nth-child(1) span:last-child').innerText;
-  const totalPok = document.querySelector('.total-box:nth-child(2) span:last-child').innerText;
-  const totalBun = document.querySelector('.total-box:nth-child(3) span:last-child').innerText;
+    function buildTable(P, rate, nMonths) {
+      const tbody = document.querySelector('#table tbody');
+      tbody.innerHTML = '';
+      const data = [];
+      const startDate = new Date();
+      const r = rate / 100;
+      const angsuran = round50(P * r / (1 - Math.pow(1 + r, -nMonths)));
+      let saldo = P;
+      let totalPokok = 0, totalBunga = 0, totalAngsuran = 0;
 
-  doc.autoTable({
-    body: [
-      ["Total Angsuran", totalAng],
-      ["Total Pokok", totalPok],
-      ["Total Bunga", totalBun]
-    ],
-    startY: doc.lastAutoTable.finalY + 10,
-    theme: 'plain',
-    styles: { fontStyle: 'bold', textColor: [15, 2, 250] },
-    columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right' } }
-  });
+      for (let m = 1; m <= nMonths; m++) {
+        const bunga = round50(saldo * r);
+        const pokok = round50(angsuran - bunga);
+        saldo -= pokok;
+        if (m === nMonths) saldo = 0;
 
-  doc.save("simulasi_angsuran.pdf");
-}
-</script>
+        const d = new Date(startDate);
+        d.setMonth(startDate.getMonth() + m);
+        const tgl = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        totalPokok += pokok;
+        totalBunga += bunga;
+        totalAngsuran += angsuran;
+
+        const row = { bulan: m, tanggal: tgl, angsuran, bunga, pokok, saldo: Math.max(0, Math.round(saldo)) };
+        data.push(row);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m}</td><td>${tgl}</td><td>${fmt(angsuran)}</td><td>${fmt(bunga)}</td><td>${fmt(pokok)}</td><td>${fmt(row.saldo)}</td>`;
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById('totalAngsuran').innerText = `Total Angsuran: ${fmt(totalAngsuran)}`;
+      document.getElementById('totalPokok').innerText = `Total Pokok: ${fmt(totalPokok)}`;
+      document.getElementById('totalBunga').innerText = `Total Bunga: ${fmt(totalBunga)}`;
+      document.getElementById('totals').style.display = 'flex';
+
+      return { data, angsuran, totalPokok, totalBunga, totalAngsuran };
+    }
+
+    document.getElementById('calc').addEventListener('click', () => {
+      const P = Number(amountInput.value.replace(/\./g, ''));
+      const rate = Number(document.getElementById('rate').value);
+      const n = Number(document.getElementById('tenor').value);
+      if (!P || !rate || !n) return alert('Mohon lengkapi semua kolom input!');
+      const { data, angsuran } = buildTable(P, rate, n);
+      window._data = data;
+      const box = document.getElementById('resultBox');
+      document.getElementById('resultText').innerText = `Angsuran per bulan: ${fmt(angsuran)}`;
+      box.style.display = 'block';
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = document.getElementById('resultText').innerText;
+      navigator.clipboard.writeText(text);
+      alert('Angsuran berhasil disalin!');
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      amountInput.value = '';
+      document.getElementById('rate').value = '';
+      document.getElementById('tenor').value = '';
+      document.querySelector('#table tbody').innerHTML = '';
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('totals').style.display = 'none';
+    });
+
+    // ✅ CSV
+    document.getElementById('export').addEventListener('click', () => {
+      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
+      const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
+      window._data.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'simulasi_angsuran.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ✅ PDF
+    document.getElementById('pdf').addEventListener('click', () => {
+      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      doc.setFontSize(16);
+      doc.setTextColor(15, 2, 250);
+      doc.text('Simulasi Angsuran', 40, 50);
+      doc.setTextColor(250, 2, 2);
+      doc.text('Credit Union ', 40, 70);
+      doc.setTextColor(15, 2, 250);
+      doc.text('Remaung Kecubung', 150, 70);
+
+      const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
+      doc.autoTable({
+        head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
+        body,
+        startY: 100,
+        theme: 'grid',
+        styles: { halign: 'right', fontSize: 9 },
+        headStyles: { fillColor: [15, 2, 250], textColor: 255, halign: 'center' },
+        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
+      });
+
+      const y = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(12);
+      doc.setTextColor(15, 2, 250);
+      doc.text(`Total Angsuran: ${document.getElementById('totalAngsuran').innerText.split(': ')[1]}`, 40, y);
+      doc.text(`Total Pokok: ${document.getElementById('totalPokok').innerText.split(': ')[1]}`, 40, y + 18);
+      doc.text(`Total Bunga: ${document.getElementById('totalBunga').innerText.split(': ')[1]}`, 40, y + 36);
+      doc.save('simulasi_angsuran.pdf');
+    });
+  </script>
 </body>
 </html>
