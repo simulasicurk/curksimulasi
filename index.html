@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Simulasi Pinjaman Credit Union Remaung Kecubung</title>
+  <title>Simulasi Angsuran Credit Union Remaung Kecubung</title>
   <style>
     :root {
-      --primary: #1e3a8a;
-      --secondary: #2563eb;
-      --accent: #ef4444;
+      --primary: #0f02fa;
+      --accent: #fa0202;
       --bg: #f3f6fc;
       --card: #ffffff;
     }
@@ -20,20 +19,43 @@
     }
     .wrap {
       max-width: 1100px;
-      margin: 30px auto;
+      margin: 20px auto;
       background: var(--card);
       border-radius: 12px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
       padding: 24px;
     }
+
+    /* HEADER (Default: putih elegan) */
     header {
+      background: var(--card);
       text-align: center;
-      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
     }
-    .title-group {
+    header h1 {
+      margin: 0;
       font-size: 22px;
-      font-weight: bold;
+    }
+    .credit {
+      color: var(--accent);
+      font-style: italic;
+    }
+    .remaung {
       color: var(--primary);
+      font-weight: bold;
+    }
+    .subtitle {
+      color: #0f172a;
+      margin-top: 4px;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
     }
     label {
       font-size: 14px;
@@ -47,13 +69,8 @@
       border: 1px solid #dbeafe;
       font-size: 15px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
     .btn {
-      background: var(--secondary);
+      background: var(--primary);
       color: white;
       border: none;
       padding: 10px 16px;
@@ -62,8 +79,9 @@
       font-weight: 600;
     }
     .btn.secondary { background: var(--accent); }
-    .btn.export { background: #1e40af; }
+    .btn.export { background: #2563eb; }
     .flex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -71,7 +89,7 @@
       font-size: 14px;
     }
     th {
-      background: var(--secondary);
+      background: var(--primary);
       color: white;
       padding: 8px;
       text-align: center;
@@ -83,48 +101,53 @@
     }
     td:first-child, th:first-child { text-align: left; }
 
-    /* Responsif untuk HP */
-    @media (max-width: 600px) {
-      body { background: #ffffff; }
-      .wrap { margin: 0; padding: 16px; border-radius: 0; }
+    /* Kotak hasil angsuran */
+    .result-box {
+      display: none;
+      margin-top: 16px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 16px;
+      position: relative;
+    }
+    .copy-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      position: absolute;
+      right: 12px;
+      top: 12px;
+    }
+
+    /* Mode HP: header gelap */
+    @media (max-width: 768px) {
+      .wrap { margin: 10px; padding: 16px; }
       header {
-        background: #1e3a8a;
-        padding: 20px 10px;
-        border-radius: 8px;
-        margin: -16px -16px 20px -16px;
-      }
-      .title-group {
+        background: #0f172a;
         color: white;
-        font-size: 20px;
-        text-align: center;
       }
-      .title-group span:first-child {
-        color: #ef4444;
-        font-style: italic;
-      }
-      .title-group span:nth-child(2) {
-        color: #1e40af;
-        font-weight: bold;
-      }
-      .title-group .subtitle {
-        display: block;
-        color: #ffffff;
-        font-size: 16px;
-        margin-top: 4px;
-      }
-      table { font-size: 12px; overflow-x: auto; display: block; }
-      .btn { flex: 1 1 100%; }
+      header h1 .credit { color: var(--accent); }
+      header h1 .remaung { color: var(--primary); }
+      .subtitle { color: white; }
+      .result-box { font-size: 15px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="title-group">
-        <span style="color:#ef4444;font-style:italic;">Credit Union</span>
-        <span style="color:#1e40af;font-weight:bold;"> Remaung Kecubung</span><br>
-        <span class="subtitle">Simulasi Angsuran</span>
-      </div>
+      <h1>
+        <span class="credit">Credit Union</span> 
+        <span class="remaung">Remaung Kecubung</span>
+      </h1>
+      <div class="subtitle">Simulasi Angsuran</div>
     </header>
 
     <div class="grid">
@@ -149,6 +172,11 @@
       <button id="pdf" class="btn export">Download PDF</button>
     </div>
 
+    <div id="resultBox" class="result-box">
+      <span id="resultText">Angsuran per bulan: Rp 0</span>
+      <button id="copyBtn" class="copy-btn">Salin</button>
+    </div>
+
     <table id="table">
       <thead>
         <tr>
@@ -164,8 +192,6 @@
     </table>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script>
     const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
     const round50 = n => Math.ceil(n / 50) * 50;
@@ -181,30 +207,27 @@
       tbody.innerHTML = '';
       const data = [];
       const startDate = new Date();
-
       const r = rate / 100;
       const angsuran = round50(P * r / (1 - Math.pow(1 + r, -nMonths)));
-
       let saldo = P;
 
       for (let m = 1; m <= nMonths; m++) {
         const bunga = round50(saldo * r);
         const pokok = round50(angsuran - bunga);
-        saldo = saldo - pokok;
+        saldo -= pokok;
         if (m === nMonths) saldo = 0;
 
         const d = new Date(startDate);
-        d.setMonth(startDate.getMonth() + m); // mulai bulan depan dari tanggal hari ini
+        d.setMonth(startDate.getMonth() + m);
         const tgl = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         const row = { bulan: m, tanggal: tgl, angsuran, bunga, pokok, saldo: Math.max(0, Math.round(saldo)) };
         data.push(row);
-
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m}</td><td>${tgl}</td><td>${fmt(angsuran)}</td><td>${fmt(bunga)}</td><td>${fmt(pokok)}</td><td>${fmt(row.saldo)}</td>`;
         tbody.appendChild(tr);
       }
-      return data;
+      return { data, angsuran };
     }
 
     document.getElementById('calc').addEventListener('click', () => {
@@ -215,7 +238,17 @@
         alert('Mohon lengkapi semua kolom input!');
         return;
       }
-      window._data = buildTable(P, rate, n);
+      const { data, angsuran } = buildTable(P, rate, n);
+      window._data = data;
+      const box = document.getElementById('resultBox');
+      document.getElementById('resultText').innerText = `Angsuran per bulan: ${fmt(angsuran)}`;
+      box.style.display = 'block';
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = document.getElementById('resultText').innerText;
+      navigator.clipboard.writeText(text);
+      alert('Angsuran berhasil disalin!');
     });
 
     document.getElementById('reset').addEventListener('click', () => {
@@ -223,45 +256,7 @@
       document.getElementById('rate').value = '';
       document.getElementById('tenor').value = '';
       document.querySelector('#table tbody').innerHTML = '';
-    });
-
-    document.getElementById('export').addEventListener('click', () => {
-      if (!window._data) return;
-      const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
-      window._data.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
-      const csv = rows.map(r => r.join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'simulasi_angsuran.csv'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('pdf').addEventListener('click', async () => {
-      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-      doc.setFontSize(18);
-      doc.setTextColor(30, 64, 175);
-      doc.text('Simulasi Pinjaman', 40, 50);
-      doc.setFontSize(14);
-      doc.setTextColor(200, 0, 0);
-      doc.text('Credit Union', 40, 70, { italic: true });
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Remaung Kecubung', 130, 70);
-
-      const body = window._data.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
-      doc.autoTable({
-        head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
-        body: body,
-        startY: 100,
-        theme: 'grid',
-        styles: { halign: 'right', fontSize: 9 },
-        headStyles: { fillColor: [30, 64, 175], textColor: 255, halign: 'center' },
-        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
-      });
-      doc.save('simulasi_angsuran.pdf');
+      document.getElementById('resultBox').style.display = 'none';
     });
   </script>
 </body>
