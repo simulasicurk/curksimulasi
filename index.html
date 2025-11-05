@@ -42,7 +42,12 @@
     header h1 { margin: 0; font-size: 22px; }
     .credit { color: var(--accent); font-style: italic; }
     .remaung { color: var(--primary); font-weight: bold; }
-    .subtitle { color: #0f172a; margin-top: 4px; font-size: 18px; }
+    .subtitle {
+      color: #0f172a;
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 600;
+    }
 
     .grid {
       display: grid;
@@ -128,23 +133,19 @@
     }
     .totals div { margin: 4px 0; }
 
-    /* Footer web */
     .web-footer {
+      text-align: center;
       color: #555;
       font-size: 0.9rem;
       margin: 20px 0 10px 0;
-      text-align: center;
     }
 
-    /* Footer PDF */
     .pdf-footer {
       display: none;
     }
 
     @media print {
-      .web-footer {
-        display: none;
-      }
+      .web-footer { display: none; }
       .pdf-footer {
         display: block;
         position: fixed;
@@ -177,9 +178,8 @@
         <span class="credit">Credit Union</span> 
         <span class="remaung">Remaung Kecubung</span>
       </h1>
+      <div class="subtitle">Simulasi Pinjaman</div>
     </header>
-
-    <div class="subtitle">Simulasi Pinjaman</div>
 
     <div class="grid">
       <div>
@@ -341,41 +341,45 @@
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
 
+      // 🖼️ Logo
+      const imgUrl = 'https://raw.githubusercontent.com/simulasicurk/curksimulasi/main/logo%20curk.png';
+      const img = new Image();
+      img.src = imgUrl;
+      await img.decode();
+      const imgWidth = 60, imgHeight = 60;
+      doc.addImage(img, 'PNG', (pageWidth - imgWidth) / 2, 30, imgWidth, imgHeight);
+
+      // 🏷️ Judul & subjudul
       doc.setFontSize(16);
-      doc.setTextColor(15, 2, 250);
-      doc.text('Simulasi Angsuran', 40, 50);
       doc.setTextColor(250, 2, 2);
-      doc.text('Credit Union ', 40, 70);
+      doc.text('Credit Union', pageWidth / 2 - 25, 110, { align: 'right' });
       doc.setTextColor(15, 2, 250);
-      doc.text('Remaung Kecubung', 150, 70);
+      doc.text('Remaung Kecubung', pageWidth / 2 - 25, 110, { align: 'left' });
 
+      doc.setFontSize(14);
+      doc.setTextColor(15, 2, 250);
+      doc.text('Simulasi Pinjaman', pageWidth / 2, 135, { align: 'center' });
+
+      // 📄 Tabel
       const body = window._data.rows.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
       doc.autoTable({
         head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
         body: body,
-        startY: 100,
+        startY: 160,
         theme: 'grid',
         styles: { halign: 'right', fontSize: 9 },
         headStyles: { fillColor: [15, 2, 250], textColor: 255, halign: 'center' },
         columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
       });
 
+      // 📊 Total
       const finalY = doc.lastAutoTable.finalY + 20;
       doc.setFontSize(11);
       doc.text(`Total Pokok : ${fmt(window._data.totalPokok)}`, 40, finalY);
       doc.text(`Total Bunga : ${fmt(window._data.totalBunga)}`, 40, finalY + 15);
       doc.text(`Total Angsuran : ${fmt(window._data.totalAngsuran)}`, 40, finalY + 30);
-
-      // Footer PDF
-      const pageHeight = doc.internal.pageSize.height;
-      doc.setDrawColor(200);
-      doc.line(40, pageHeight - 40, doc.internal.pageSize.width - 40, pageHeight - 40);
-      doc.setFillColor(230, 236, 255);
-      doc.rect(40, pageHeight - 38, doc.internal.pageSize.width - 80, 24, 'F');
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(10);
-      doc.text('© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.', doc.internal.pageSize.width / 2, pageHeight - 22, { align: 'center' });
 
       doc.save('simulasi_angsuran.pdf');
     });
