@@ -32,6 +32,13 @@
       background: var(--card);
       border-radius: 12px 12px 0 0;
     }
+    header img {
+      width: 120px;
+      max-width: 40%;
+      height: auto;
+      display: block;
+      margin: 0 auto 10px auto;
+    }
     header h1 { margin: 0; font-size: 22px; }
     .credit { color: var(--accent); font-style: italic; }
     .remaung { color: var(--primary); font-weight: bold; }
@@ -121,6 +128,37 @@
     }
     .totals div { margin: 4px 0; }
 
+    /* Footer web */
+    .web-footer {
+      color: #555;
+      font-size: 0.9rem;
+      margin: 20px 0 10px 0;
+      text-align: center;
+    }
+
+    /* Footer PDF */
+    .pdf-footer {
+      display: none;
+    }
+
+    @media print {
+      .web-footer {
+        display: none;
+      }
+      .pdf-footer {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #000;
+        border-top: 1px solid #ccc;
+        background-color: #e6ecff;
+        padding: 6px 0;
+      }
+    }
+
     @media (max-width: 768px) {
       .wrap { margin: 10px; padding: 16px; }
       header { background: #0f172a; color: white; }
@@ -134,12 +172,14 @@
 <body>
   <div class="wrap">
     <header>
+      <img src="https://raw.githubusercontent.com/simulasicurk/curksimulasi/main/logo%20curk.png" alt="Logo Credit Union Remaung Kecubung">
       <h1>
         <span class="credit">Credit Union</span> 
         <span class="remaung">Remaung Kecubung</span>
       </h1>
-      <div class="subtitle">Simulasi Angsuran</div>
     </header>
+
+    <div class="subtitle">Simulasi Pinjaman</div>
 
     <div class="grid">
       <div>
@@ -168,6 +208,8 @@
       <button id="copyBtn" class="copy-btn">Salin</button>
     </div>
 
+    <div class="web-footer">© 2025 Credit Union Remaung Kecubung</div>
+
     <table id="table">
       <thead>
         <tr>
@@ -188,6 +230,8 @@
       <div>Total Bunga: <span id="tBunga"></span></div>
     </div>
   </div>
+
+  <div class="pdf-footer">© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -322,6 +366,16 @@
       doc.text(`Total Pokok : ${fmt(window._data.totalPokok)}`, 40, finalY);
       doc.text(`Total Bunga : ${fmt(window._data.totalBunga)}`, 40, finalY + 15);
       doc.text(`Total Angsuran : ${fmt(window._data.totalAngsuran)}`, 40, finalY + 30);
+
+      // Footer PDF
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setDrawColor(200);
+      doc.line(40, pageHeight - 40, doc.internal.pageSize.width - 40, pageHeight - 40);
+      doc.setFillColor(230, 236, 255);
+      doc.rect(40, pageHeight - 38, doc.internal.pageSize.width - 80, 24, 'F');
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text('© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.', doc.internal.pageSize.width / 2, pageHeight - 22, { align: 'center' });
 
       doc.save('simulasi_angsuran.pdf');
     });
