@@ -33,21 +33,18 @@
       border-radius: 12px 12px 0 0;
     }
     header img {
-      width: 120px;
-      max-width: 40%;
+      width: 80px;
       height: auto;
       display: block;
       margin: 0 auto 10px auto;
     }
-    header h1 { margin: 0; font-size: 22px; }
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
     .credit { color: var(--accent); font-style: italic; }
     .remaung { color: var(--primary); font-weight: bold; }
-    .subtitle {
-      color: #0f172a;
-      margin-top: 8px;
-      font-size: 18px;
-      font-weight: 600;
-    }
+    .subtitle { color: #0f172a; margin-top: 8px; font-size: 18px; }
 
     .grid {
       display: grid;
@@ -133,31 +130,11 @@
     }
     .totals div { margin: 4px 0; }
 
-    .web-footer {
+    .footer-text {
       text-align: center;
-      color: #555;
-      font-size: 0.9rem;
-      margin: 20px 0 10px 0;
-    }
-
-    .pdf-footer {
-      display: none;
-    }
-
-    @media print {
-      .web-footer { display: none; }
-      .pdf-footer {
-        display: block;
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        text-align: center;
-        font-size: 0.9rem;
-        color: #000;
-        border-top: 1px solid #ccc;
-        background-color: #e6ecff;
-        padding: 6px 0;
-      }
+      margin-top: 16px;
+      font-size: 12px;
+      color: #64748b;
     }
 
     @media (max-width: 768px) {
@@ -173,7 +150,7 @@
 <body>
   <div class="wrap">
     <header>
-      <img src="https://raw.githubusercontent.com/simulasicurk/curksimulasi/main/logo%20curk.png" alt="Logo Credit Union Remaung Kecubung">
+      <img src="https://raw.githubusercontent.com/simulasicurk/curksimulasi/main/logo%20curk.png" alt="Logo CU Remaung Kecubung" />
       <h1>
         <span class="credit">Credit Union</span> 
         <span class="remaung">Remaung Kecubung</span>
@@ -208,8 +185,6 @@
       <button id="copyBtn" class="copy-btn">Salin</button>
     </div>
 
-    <div class="web-footer">© 2025 Credit Union Remaung Kecubung</div>
-
     <table id="table">
       <thead>
         <tr>
@@ -229,9 +204,9 @@
       <div>Total Pokok: <span id="tPokok"></span></div>
       <div>Total Bunga: <span id="tBunga"></span></div>
     </div>
-  </div>
 
-  <div class="pdf-footer">© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.</div>
+    <div class="footer-text">© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.</div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -321,52 +296,47 @@
       document.getElementById('totals').style.display = 'none';
     });
 
-    // ✅ CSV
-    document.getElementById('export').addEventListener('click', () => {
-      if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
-      const rows = [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']];
-      window._data.rows.forEach(r => rows.push([r.bulan, r.tanggal, r.angsuran, r.bunga, r.pokok, r.saldo]));
-      rows.push([]);
-      rows.push(['Total','','',window._data.totalBunga,window._data.totalPokok,window._data.totalAngsuran]);
-      const csv = rows.map(r => r.join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'simulasi_angsuran.csv'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    // ✅ PDF
+    // ✅ PDF proporsional + footer
     document.getElementById('pdf').addEventListener('click', async () => {
       if (!window._data) return alert('Harap lakukan perhitungan terlebih dahulu.');
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-      // 🖼️ Logo
+      // 🖼️ Logo di tengah
       const imgUrl = 'https://raw.githubusercontent.com/simulasicurk/curksimulasi/main/logo%20curk.png';
       const img = new Image();
       img.src = imgUrl;
       await img.decode();
-      const imgWidth = 60, imgHeight = 60;
-      doc.addImage(img, 'PNG', (pageWidth - imgWidth) / 2, 30, imgWidth, imgHeight);
+      const imgW = 60, imgH = 60;
+      doc.addImage(img, 'PNG', (pageWidth - imgW) / 2, 30, imgW, imgH);
 
-      // 🏷️ Judul & subjudul
+      // 🏷️ Judul tengah
       doc.setFontSize(16);
       doc.setTextColor(250, 2, 2);
-      doc.text('Credit Union', pageWidth / 2 - 25, 110, { align: 'right' });
+      const title1 = 'Credit Union';
+      const title2 = 'Remaung Kecubung';
+      const w1 = doc.getTextWidth(title1);
+      const w2 = doc.getTextWidth(title2);
+      const totalW = w1 + w2 + 8;
+      const startX = (pageWidth - totalW) / 2;
+      const yTitle = 110;
+      doc.text(title1, startX, yTitle);
       doc.setTextColor(15, 2, 250);
-      doc.text('Remaung Kecubung', pageWidth / 2 - 25, 110, { align: 'left' });
+      doc.text(title2, startX + w1 + 8, yTitle);
 
+      // 🏷️ Subjudul di bawahnya
       doc.setFontSize(14);
-      doc.setTextColor(15, 2, 250);
       doc.text('Simulasi Pinjaman', pageWidth / 2, 135, { align: 'center' });
 
-      // 📄 Tabel
-      const body = window._data.rows.map(r => [r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)]);
+      // 📋 Tabel
+      const body = window._data.rows.map(r => [
+        r.bulan, r.tanggal, fmt(r.angsuran), fmt(r.bunga), fmt(r.pokok), fmt(r.saldo)
+      ]);
       doc.autoTable({
         head: [['Bulan','Tanggal','Angsuran','Bunga','Pokok','Sisa Saldo']],
-        body: body,
+        body,
         startY: 160,
         theme: 'grid',
         styles: { halign: 'right', fontSize: 9 },
@@ -377,9 +347,15 @@
       // 📊 Total
       const finalY = doc.lastAutoTable.finalY + 20;
       doc.setFontSize(11);
+      doc.setTextColor(0,0,0);
       doc.text(`Total Pokok : ${fmt(window._data.totalPokok)}`, 40, finalY);
       doc.text(`Total Bunga : ${fmt(window._data.totalBunga)}`, 40, finalY + 15);
       doc.text(`Total Angsuran : ${fmt(window._data.totalAngsuran)}`, 40, finalY + 30);
+
+      // 📜 Footer di bawah halaman
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('© 2025 Credit Union Remaung Kecubung. Semua Hak Dilindungi.', pageWidth / 2, pageHeight - 20, { align: 'center' });
 
       doc.save('simulasi_angsuran.pdf');
     });
